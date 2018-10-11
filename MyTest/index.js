@@ -18,8 +18,8 @@ const path = require('path');
 const createHandler = require('azure-function-express').createHandler;
 const app = require('express')();
 
-var redirectUri = "https://esd-qb-kp.azurewebsites.net";
-//var redirectUri = 'http://localhost:' + port ;
+var reloadHtml = "";
+var resultsUrl = "";
 
 // Generic Express config
 console.log('About to set generic express config...');
@@ -38,8 +38,15 @@ app.listen(app.get('port'), function () {
   console.log('Express server listening on port ' + app.get('port'));
 });
 
-var consumerKey = 'Q0hWFVoQP0AlilQGDbZDlqj9lZKqbf7R7S8IS8LTfOKrZTLTzb';
-var consumerSecret = 'LG8hWygP46wQKlAccWKDRjPohdif2TOTMBEXQZGh';
+// development
+// var consumerKey = 'Q0hWFVoQP0AlilQGDbZDlqj9lZKqbf7R7S8IS8LTfOKrZTLTzb';
+// var consumerSecret = 'LG8hWygP46wQKlAccWKDRjPohdif2TOTMBEXQZGh';
+// var redirectUri = 'http://localhost:' + port ;
+
+//production
+var consumerKey = 'Q0nZqGF1fU7gd7am7k5z5zzu2ueKGvDCcG1GIlcHyU6FMJb1Rq';
+var consumerSecret = 'hyb3j6KzGfjd5L6aqi5SYa1Q0ZDHLF4YGZznqaeZ';
+var redirectUri = "https://esd-qb-kp.azurewebsites.net";
 
 app.get("/logout", (req, res) => {
     res.send("Thank you for using our app.");
@@ -47,6 +54,10 @@ app.get("/logout", (req, res) => {
 
 app.get("/login", (req, res) => {
     res.send("Welcome to the login page");
+});
+
+app.get("/results", (req, res) => {
+    res.send("These are the results from QuickBooks:<br> " + reloadHtml);
 });
 
 app.get("/qb", (req, res) => {
@@ -62,21 +73,20 @@ app.get('/requestToken', function (req, res) {
     '&scope=com.intuit.quickbooks.accounting' +
     '&response_type=code' +
     '&state=' + generateAntiForgery(req.session);
-
+    console.log(redirecturl);
     res.redirect(redirecturl);
 });
 
 
 app.get('/callback', function (req, res) {
-    console.log('In app.get callback...');
     var auth = (new Buffer(consumerKey + ':' + consumerSecret).toString('base64'));
 
-  var postBody = {
-    url: 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: 'Basic ' + auth,
+    var postBody = {
+        url: 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer',
+        headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: 'Basic ' + auth,
     },
     form: {
       grant_type: 'authorization_code',
@@ -89,6 +99,7 @@ app.get('/callback', function (req, res) {
     var accessToken = JSON.parse(r.body);
     // save the access token somewhere on behalf of the logged in user
 
+    reloadHtml = "<body>";
     var qbo = new QuickBooks(consumerKey,
       consumerSecret,
       accessToken.access_token, /* oAuth access token */
@@ -100,24 +111,30 @@ app.get('/callback', function (req, res) {
       '2.0', /* oauth version */
      accessToken.refresh_token /* refresh token */);
 
-     console.log(consumerKey);
-     console.log(consumerSecret);
-     console.log(accessToken.access_token);
-     console.log(req.query.realmId);
-     console.log(accessToken.refresh_token);
+     reloadHtml += "<b>Consumer Key:</b> " + consumerKey + "<br>";
+     reloadHtml += "<b>Consumer Secret:</b> " + consumerKey  + "<br>";
+     reloadHtml += "<b>Access Token:</b> " + accessToken.access_token  + "<br>";
+     
+    //  console.log(consumerSecret);
+    //  console.log(accessToken.access_token);
+    //  console.log(req.query.realmId);
+    //  console.log(accessToken.refresh_token);
    
-    var i;
+    var i = 0;
     qbo.findAccounts(function (_, accounts) {
       accounts.QueryResponse.Account.forEach(function (account) {
       i++ ;
       });
     });
-    console.log('Number of Accounts: ' + i)
-    console.log('consumerKey:' + consumerKey + ' consumerSecret' + consumerSecret + ' accessToken:' + accessToken.access_token + ' realmId:' + req.query.realmId + ' refreshtoken:' + accessToken.refresh_token);
-
+   console.log('Number of Accounts: ' + i);
+    reloadHtml += "<b>Number of Accounts:</b> " + i  + "<br></body>";
+ 
   });
 
-  res.send('<!DOCTYPE html><html lang="en"><head></head><body><script>window.opener.location.reload(); window.close();</script></body></html>');
+  resultsUrl = "'https://esd-qb-kp.azurewebsites.net/results'";
+  var newHtml = '<!DOCTYPE html><html lang="en"><head></head><body><script>alert("hello4");window.opener.location="/results";window.close();</script></body></html>';
+
+  res.send(newHtml);
 });
 
 module.exports = createHandler(app);
