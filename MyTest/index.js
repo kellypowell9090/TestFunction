@@ -62,8 +62,7 @@ app.get('/requestToken', function (req, res) {
     '&scope=com.intuit.quickbooks.accounting' +
     '&response_type=code' +
     '&state=' + generateAntiForgery(req.session);
-    console.log('redirecturl....');
-    console.log(redirecturl);
+
     res.redirect(redirecturl);
 });
 
