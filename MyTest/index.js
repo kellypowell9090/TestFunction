@@ -43,6 +43,7 @@ app.listen(app.get('port'), function () {
 // var consumerSecret = 'LG8hWygP46wQKlAccWKDRjPohdif2TOTMBEXQZGh';
 // var redirectUri = 'http://localhost:' + port ;
 
+
 //production
 var consumerKey = 'Q0nZqGF1fU7gd7am7k5z5zzu2ueKGvDCcG1GIlcHyU6FMJb1Rq';
 var consumerSecret = 'hyb3j6KzGfjd5L6aqi5SYa1Q0ZDHLF4YGZznqaeZ';
