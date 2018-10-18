@@ -11,6 +11,7 @@
   "author": "Kelly Powell",
   "license": "ISC",
   "dependencies": {
+    "azure-keyvault": "3.0.4",
     "azure-function-express": "^2.0.0",
     "bluebird": "^3.5.2",
     "body-parser": "^1.13.3",
@@ -19,6 +20,7 @@
     "ejs": "2.5.5",
     "express": "^4.13.3",
     "express-session": "^1.11.3",
+    "ms-rest-azure": "2.5.9",
     "node-quickbooks": "2.0.0"
   }
 }

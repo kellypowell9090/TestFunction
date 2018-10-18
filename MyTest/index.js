@@ -1,4 +1,4 @@
-
+var Vault = require('./vault.js');
 var http = require('http');
 var port = process.env.PORT || 3000;
 var request = require('request');
@@ -65,6 +65,14 @@ app.get("/qb", (req, res) => {
     res.render('intuit.ejs', { port: port, appCenter: QuickBooks.APP_CENTER_BASE });
 });
 
+app.get("/vault", (req, res) =>  {
+  //access this locally at: http://localhost:3000/vault?name=kel
+  //access on azure at: https://esd-qb-kp.azurewebsites.net/vault?name=kel
+  let result =  Vault.testVault(req.context, req).then(function(value) {
+      res.send("Vault test returned: " + value)
+    });
+
+});
 
 app.get('/requestToken', function (req, res) {
     console.log('In app.get request token');
