@@ -2116,11 +2116,12 @@ module.request = function(context, verb, options, entity, callback) {
   }
   request[verb].call(context, opts, function (err, res, body) {
     if ('production' !== process.env.NODE_ENV && context.debug) {
-      console.log('invoking endpoint: ' + url)
-      console.log(entity || '')
-      console.log(JSON.stringify(body, null, 2));
+      console.log('Invoking Endpoint: ' + url);
+      console.log('Entity: ' + entity || '');
+      console.log('Body: ' + JSON.stringify(body, null, 2));
     }
     if (callback) {
+
       if (err ||
           res.statusCode >= 300 ||
           (_.isObject(body) && body.Fault && body.Fault.Error && body.Fault.Error.length) ||
@@ -2130,6 +2131,7 @@ module.request = function(context, verb, options, entity, callback) {
         callback(null, body)
       }
     }
+
   })
 }
 
