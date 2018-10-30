@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<% include ./partials/head %>
+<body>
+<% include ./partials/nav %>
+  <div class="jumbotron">
+    <div class="container">
+    <h1>List Accounts</h1>
+        <p>This is a list of accounts in your QuickBooks</p>
+    </div>    
+  </div>
+  <div class="container"> 
+  <table>
+		<tr>
+			<th width=200>ID</th>
+			<th>Name</th>
+		</tr>
+		<% locals.accounts.forEach((account) => { %>
+			<tr>
+			<td><%= account.Id %></td>
+			<td><%= account.Name %></td>
+		  </tr>               
+        <% }) %>
+							
+      </table>
+               
+  </div>
+</body>
+</html>

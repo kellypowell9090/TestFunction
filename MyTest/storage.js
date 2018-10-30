@@ -49,7 +49,7 @@ exports.logToBlob =  function (text)
         if(error){
             console.log("Couldn't upload to blob file: " + blobName + ", Error: " + error);
         } else {
-            console.log("Successfully uploaded to blob file: " + blobName );
+            //console.log("Successfully uploaded to blob file: " + blobName );
         }
     });
 }

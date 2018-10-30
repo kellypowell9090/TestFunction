@@ -11,6 +11,7 @@ var express = require('express');
 //var app = express();
 var QuickBooks = require('../index');
 var Tokens = require('csrf');
+var miscFunctions = require("./miscFunctions.js");
 var csrf = new Tokens();
 const fs = require('fs');
 const path = require('path');
@@ -23,9 +24,7 @@ const app = require('express')();
 var sessionSet = false;
 var reloadHtml = "";
 const version = "2.2";
-const OAUTH_MINOR_VERSION = 4;
-const OAUTH_MAJOR_VERSION = '2.0';
-const QBO_DEBUG = true;
+
 
 // Generic Express config
 console.log('About to set generic express config...');
@@ -37,6 +36,7 @@ app.use(session({ resave: false, saveUninitialized: false, secret: 'smith' }));
 app.engine('html', require('ejs').renderFile);
 app.set('view engine', 'html');
 app.set('views',  __dirname + '\\views');
+app.set('routes', './routes');
 
 BlobStorage.configureBlobLogging().then(function() {
   //BlobStorage.logToBlob(version + " - Blob logging has been configured");
@@ -47,16 +47,18 @@ app.listen(app.get('port'), function () {
 });
 
 // development
-// var consumerKey = 'Q0hWFVoQP0AlilQGDbZDlqj9lZKqbf7R7S8IS8LTfOKrZTLTzb';
-// var consumerSecret = 'LG8hWygP46wQKlAccWKDRjPohdif2TOTMBEXQZGh';
-// var redirectUri = 'http://localhost:' + port ;
-// var useSandbox = true;
+var consumerKey = 'Q0hWFVoQP0AlilQGDbZDlqj9lZKqbf7R7S8IS8LTfOKrZTLTzb';
+var consumerSecret = 'LG8hWygP46wQKlAccWKDRjPohdif2TOTMBEXQZGh';
+var redirectUri = 'http://localhost:' + port ;
+var useSandbox = true;
+var grantUrl = redirectUri + '/requestToken/';
 
 //production
-var consumerKey = 'Q0nZqGF1fU7gd7am7k5z5zzu2ueKGvDCcG1GIlcHyU6FMJb1Rq';
-var consumerSecret = 'hyb3j6KzGfjd5L6aqi5SYa1Q0ZDHLF4YGZznqaeZ';
-var redirectUri = "https://esd-qb-kp.azurewebsites.net";
-var useSandbox = false;
+// var consumerKey = 'Q0nZqGF1fU7gd7am7k5z5zzu2ueKGvDCcG1GIlcHyU6FMJb1Rq';
+// var consumerSecret = 'hyb3j6KzGfjd5L6aqi5SYa1Q0ZDHLF4YGZznqaeZ';
+// var redirectUri = "https://esd-qb-kp.azurewebsites.net";
+// var useSandbox = false;
+// var grantUrl = 'https://esd-qb-kp.azurewebsites.net/requestToken';
 
 //Simple route which redirects / to /qb
 app.get('/', function (req, res) {
@@ -91,7 +93,7 @@ app.get("/qb", (req, res) => {
       res.render('home.ejs');
     } else {
       //If no session has been set, will render the start page to initiate login
-      res.render('intuit.ejs', { locals: { port: port, appCenter: QuickBooks.APP_CENTER_BASE } })
+      res.render('intuit.ejs', { locals: { port: port, appCenter: QuickBooks.APP_CENTER_BASE, grantUrl: grantUrl } })
     }
 });
 
@@ -105,50 +107,6 @@ app.get("/realmtest", (req, res) => {
   });
 
 });
-
-app.get("/testing", (req, res) => {
-  //access on azure at: https://esd-qb-kp.azurewebsites.net/testing
-  //or locally at: http://localhost:3000/testing?name=Kelly
-  
-  //BlobStorage.logToBlob(version + " - The testing page was loaded");
-  
-  var accesstoken = "eyJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..fQT_Myo6PNuiE7KRkX5FlA.DcwWY6Kx76DX3gUyUZvV4lrQH0TEH3HBW-rV19E1XRhqO8PYCRaUU9wJI4wqlAAcPZ-erh5XQIqK29D8PbKuMZ82v5_mYrLVyZtifzwpzhesJ9afe3WtfOC-dAvBQSjNLR-ytg19imIUCRBOcNzg3DSMx5hAHjS5gmGjLnY72nO1SfT622nsoEbOQ3ScxWsxsuWzqWjvbIggecpy3fAN_OT0aZXGduepXQ6bXcSjCRQhA-arTL_scjL3lb4WqfYPZMar5b7YVlWT23mncVmo-4z2xrj9fSbFbJAB5NVldFFrwVwECUbNrr_qpNRnhdmTW_BLoebrCkrfUYQcMs6WXGfA9DS6ikExqJIye9enZywkWOKrGdh_7sAUmHa5yvMTZXgmldy_GNISCnsIw23WYZyeLAvMgXgTulNNh-C3GwrXEJbaRkygMlYtjU-m3Fk5OPIrtBpPBC5xcbw5jjw-2avNcP1oFteOLlIa6a-mosL0QwSfy_qhrXuBLNPYfa_jZnLChHu_i321pag1Aa8ilezZlRyG-aEsLWvjS3TDYZjEUP6B9IxEZf9CxPt-15Kx88NCBei2kMYdGrYDRckUZTvfLHTfmCFj1ndZHhV-d5FhavUAEjextKY3QuY3X4uyDig67AXRC1DUeOq7PW3wNGW0G-eGhc605P15ILDOF-bfOU8lEjRsisyNA8KLnKzV.KYOV7eZDrlGJc37iSeY_YA";
-  var refreshtoken = "Q0115495099370LtXk6RIkHAnmovqKgLQS6EIWcr7BNA55ixwM";
-  var realmId = ""; //"123146147249104";
-  var i = 0;
-  var html = "<body><b>Version: " + version + "</b> - The following accounts exist: " + "<br><br>";
-
-  let realmSecretName = "RealmID" + req.query.name;
-  Vault.GetVaultSecret(realmSecretName).then(function(realmId) {
-  console.log("GetVaultSecret returned: " + realmId);
-
-    var qbo = new QuickBooks(consumerKey,
-      consumerSecret, accesstoken, false, /* no token secret for oAuth 2.0 */
-      realmId, useSandbox, false, OAUTH_MINOR_VERSION, OAUTH_MAJOR_VERSION,  refreshtoken );
-
-
-    qbo.findAccounts(function (err, accounts) {
-      if(err)
-      {
-        console.log("An error occurred");
-        res.render('errorpage.ejs', { errorMessage: err.fault.error[0] });
-      }
-      else
-      {
-        accounts.QueryResponse.Account.forEach(function (account) {
-          html +=  account.Name + "<br>";
-          i++ ;
-        });
-    
-        html += "<br><b>Total Number of Accounts:</b> " + i  + "<br></body>";
-        res.send(html);
-      }
-      });
-
-    });
-
-});
-
 
 app.get("/vault", (req, res) =>  {
   //access this locally at: http://localhost:3000/vault?name=kel
@@ -194,25 +152,23 @@ app.get('/callback', function (req, res) {
   request.post(postBody, function (e, r, data) {
     var accessToken = JSON.parse(r.body);
    // save the access token somewhere on behalf of the logged in user
-
-    // BlobStorage.logToBlob(version + " - about to save access token in callback");
     //The Access Token is stored in req.session.qbo
     req.session.qbo = {
-      token: accessToken.access_token,
-      secret: "",
+      accesstToken: accessToken.access_token,
+      refreshToken: accessToken.refresh_token,
       companyid: req.query.realmId,
       consumerkey: consumerKey,
-      consumersecret: consumerSecret
+      consumersecret: consumerSecret,
+      useSandbox: useSandbox,
     };
  
     reloadHtml = "<body>";
-    var qbo = new QuickBooks(consumerKey,
-      consumerSecret, accessToken.access_token, false, /* no token secret for oAuth 2.0 */
-      req.query.realmId,
-      useSandbox,   QBO_DEBUG, 
-      OAUTH_MINOR_VERSION, OAUTH_MAJOR_VERSION, accessToken.refresh_token );
+ 
+    var qbo = miscFunctions.getQbo(QuickBooks, req.session.qbo);
+    sessionSet = true;
 
-      sessionSet = true;
+    //Include the routes.js file, the qbo object is passed into the this file
+    var router = require('./routes/routes.js')(app, qbo, version);
 
     reloadHtml += "<b>Refresh Token:</b> " + accessToken.refresh_token  + "<br>";
     reloadHtml += "<b>Realm ID:</b> " + req.query.realmId  + "<br>";
@@ -223,17 +179,7 @@ app.get('/callback', function (req, res) {
     BlobStorage.logToBlob(version + " - the refresh_token is:" + accessToken.refresh_token);
     BlobStorage.logToBlob(version + " - the refresh token expires in:" + accessToken.x_refresh_token_expires_in);
 
-    var i = 0;
-    qbo.findAccounts(function (_, accounts) {
-      accounts.QueryResponse.Account.forEach(function (account) {
-        //BlobStorage.logToBlob(version + " - Found an account: " + account)
-        i++ ;
-      });
-      BlobStorage.logToBlob(version + " - At end of number of accounts: " + i);
-      reloadHtml += "<b>Number of Accounts:</b> " + i  + "<br></body>";
-      var newHtml = '<!DOCTYPE html><html lang="en"><head></head><body><script>window.opener.location="/results";window.close();</script></body></html>';
-      res.send(newHtml);
-    });
+    res.send('<!DOCTYPE html><html lang="en"><head></head><body><script>window.opener.location.reload(); window.close();</script></body></html>');
 
   });
 });
