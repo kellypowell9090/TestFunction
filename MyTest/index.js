@@ -20,6 +20,7 @@ var BlobStorage = require('./storage.js');
 const createHandler = require('azure-function-express').createHandler;
 const app = require('express')();
 
+var sessionSet = false;
 var reloadHtml = "";
 const version = "2.2";
 const OAUTH_MINOR_VERSION = 4;
@@ -57,6 +58,11 @@ var consumerSecret = 'hyb3j6KzGfjd5L6aqi5SYa1Q0ZDHLF4YGZznqaeZ';
 var redirectUri = "https://esd-qb-kp.azurewebsites.net";
 var useSandbox = false;
 
+//Simple route which redirects / to /qb
+app.get('/', function (req, res) {
+  res.redirect('/qb');
+})
+
 app.get("/logout", (req, res) => {
   BlobStorage.logToBlob(version + " - The logout page was loaded.");
     res.send("Thank you for using our app.");
@@ -74,10 +80,19 @@ app.get("/results", (req, res) => {
     res.send("These are the results from QuickBooks:<br> " + reloadHtml );
 });
 
+//This route is the start of the application, it checks to see if there is a session, 
+//if no session set, it will render the login page
 app.get("/qb", (req, res) => {
     //access on azure at: https://esd-qb-kp.azurewebsites.net/qb
-    BlobStorage.logToBlob(version + " - The qb connect page was loaded");
-    res.render('intuit.ejs', { port: port, appCenter: QuickBooks.APP_CENTER_BASE });
+    BlobStorage.logToBlob(version + " - The qb connect page was loaded. sessionSet: " + sessionSet);
+
+    if (sessionSet) {
+      //If a session is set, this identifies that the user has logged in and renders home.ejs view
+      res.render('home.ejs');
+    } else {
+      //If no session has been set, will render the start page to initiate login
+      res.render('intuit.ejs', { locals: { port: port, appCenter: QuickBooks.APP_CENTER_BASE } })
+    }
 });
 
 app.get("/realmtest", (req, res) => {
@@ -178,19 +193,26 @@ app.get('/callback', function (req, res) {
 
   request.post(postBody, function (e, r, data) {
     var accessToken = JSON.parse(r.body);
-    // save the access token somewhere on behalf of the logged in user
+   // save the access token somewhere on behalf of the logged in user
 
+    // BlobStorage.logToBlob(version + " - about to save access token in callback");
+    //The Access Token is stored in req.session.qbo
+    req.session.qbo = {
+      token: accessToken.access_token,
+      secret: "",
+      companyid: req.query.realmId,
+      consumerkey: consumerKey,
+      consumersecret: consumerSecret
+    };
+ 
     reloadHtml = "<body>";
     var qbo = new QuickBooks(consumerKey,
-      consumerSecret,
-      accessToken.access_token, /* oAuth access token */
-      false, /* no token secret for oAuth 2.0 */
+      consumerSecret, accessToken.access_token, false, /* no token secret for oAuth 2.0 */
       req.query.realmId,
-      useSandbox, /* use a sandbox account */
-      true, /* turn debugging on */
-      4, /* minor version */
-      '2.0', /* oauth version */
-     accessToken.refresh_token /* refresh token */);
+      useSandbox,   QBO_DEBUG, 
+      OAUTH_MINOR_VERSION, OAUTH_MAJOR_VERSION, accessToken.refresh_token );
+
+      sessionSet = true;
 
     reloadHtml += "<b>Refresh Token:</b> " + accessToken.refresh_token  + "<br>";
     reloadHtml += "<b>Realm ID:</b> " + req.query.realmId  + "<br>";
@@ -224,12 +246,3 @@ function generateAntiForgery (session) {
   return csrf.create(session.secret);
 };
  
-function handleQbError (err) {
-  if(err)
-  {
-    if(err.fault != null && err.fault.error != null)
-    {
-
-    }
-  }
-};
